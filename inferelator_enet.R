@@ -40,9 +40,9 @@ my.glmnet <- function(x, y, family=c("gaussian","binomial","poisson","multinomia
                       lambda=NULL, standardize=TRUE, thresh=1e-04, 
                       dfmax=ncol(x) + 1, pmax=min(dfmax * 1.2, ncol(x)), exclude,
                       penalty.factor=rep(1, ncol(x)),
-                      maxit=100, HessianExact=FALSE, type=c("covariance", "naive"), ...)
-  glmnet( x, y, family, weights, offset, alpha, nlambda, lambda.min, lambda, standardize, thresh, dfmax, pmax, exclude,
-         penalty.factor, maxit, HessianExact, type )
+                      maxit=100, type=ifelse(ncol(x)<500,"covariance","naive"), ... ) ##c("covariance", "naive"), HessianExact=FALSE, 
+  glmnet( x, y, family, weights, offset, alpha, nlambda, lambda.min, lambda, standardize, thresh, dfmax, pmax,
+         exclude, penalty.factor, maxit, type ) ##HessianExact, 
 
 inferelator.enet <- function( profile, predictor.mat, conds.use, col.map=NULL, tau=10, ##tau.best=NULL,
                              ratio.cutoff=3, coef.cutoff=0.02, cv.k=10, cv.choose="min+2se", ##logit.scale=0.25,
@@ -94,10 +94,13 @@ inferelator.enet <- function( profile, predictor.mat, conds.use, col.map=NULL, t
 
   orig.penalties <- penalties
   in.penalties <- rep( 1, ncol( df.tmp ) ); names( in.penalties ) <- colnames( df.tmp )
-  if ( ! is.na( penalties ) && any( names( penalties ) %in% names( in.penalties ) ) ) {
+  if ( exists( "penalties" ) && ! is.na( penalties ) && any( names( penalties ) %in% names( in.penalties ) ) ) {
     penalties <- penalties[ names( penalties ) %in% names( in.penalties ) ]
     in.penalties[ names( penalties ) ] <- penalties
+  } else {
+    orig.penalties <- in.penalties
   }
+  
   ## TODO: if penalty[x] is not 1, set any penalty[x.y.min] to the average of penalty[x] and penalty[y] ??
   if ( any( orig.penalties != 1 ) ) {
     tmp <- names( which( orig.penalties != 1 ) )
@@ -237,7 +240,7 @@ inferelator.enet <- function( profile, predictor.mat, conds.use, col.map=NULL, t
     min.err <- cv.glmnet.obj$cv.error[ min.i ]
 
     ##if ( cv.choose[ 1 ] == "min" ) best.s <- which.min( cv.glmnet.obj$cv )
-    ##else
+    ##!else
     se <- 1
     if ( grepl( "+", cv.choose[ 1 ], fixed=T ) ) {
       se <- as.numeric( gsub( "min+", "", gsub( "se", "", cv.choose[ 1 ] ) ) )

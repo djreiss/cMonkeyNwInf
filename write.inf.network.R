@@ -52,9 +52,9 @@ plot.coeff.obj <- function( coeffs, do.scattersmooth=T, ... ) {
   }
 
   if ( ! is.null( coeffs$pred.ts ) && nrow( coeffs$pred.ts ) > 1 ) { ## bootstrapped at the inferelator level
-    matlines( t( apply( coeffs$pred.ss[ ,pi$clust.conds.plot ], 2, quantile, prob=c( 0.1, 0.9 ) ) ),
+    matlines( t( apply( coeffs$pred.ss[ ,pi$clust.conds.plot ], 2, quantile, prob=c( 0.1, 0.9 ), na.rm=T ) ),
              col=rep( "lightblue", 2 ), lty=1, lwd=3 )
-    matlines( t( apply( coeffs$pred.ts[ ,pi$clust.conds.plot ], 2, quantile, prob=c( 0.1, 0.9 ) ) ),
+    matlines( t( apply( coeffs$pred.ts[ ,pi$clust.conds.plot ], 2, quantile, prob=c( 0.1, 0.9 ), na.rm=T ) ),
              col=rep( "gray", 2 ), lty=1, lwd=3 )
   }
 
@@ -155,86 +155,144 @@ plot.cluster.coeffs <- function( coefs, scale=1, cex=0.5, ... ) {
 }
 
 ###########################################
+## write.inf.network
+## Create a reg-net network for cytoscape that is compatible with bicluster network that is
+##   generated via cMonkey::write.bicluster.network()
+###########################################
+write.inf.network <- function( coeffs, out.dir=NULL ) {
+  sifs <- noas <- list()
+  ands <- 1
+  for ( i in 1:length( coeffs ) ) {
+    cat( '.' ); if ( i %% 10 == 0 ) cat( i )
+    sif <- noa <- NULL
+    cc <- coeffs[[ i ]]
+    for ( coe in names( cc$coeffs ) ) {
+      p.value <- NA
+      if ( ! is.null( cc$coef.quantiles ) && coe %in% rownames( cc$coef.quantiles ) )
+        p.value <- cc$coef.quantiles[ coe, "n" ]
+      int <- "up-regulates"
+      if ( cc$coeffs[ coe ] < 0 ) int <- "down-regulates"
+      if ( any( grepl( "~~", coe ) ) ) {
+        tmp <- strsplit( coe, "~~", fixed=T )[[ 1 ]][ 1:2 ]
+        and.gate <- sprintf( "AND-%05d", ands )
+        ands <- ands + 1
+        sif <- rbind( sif, data.frame( node1=and.gate, int=int, node2=sprintf( "bicluster_%04d", i ),
+                                      weight=cc$coeffs[ coe ], p.value=p.value ) )
+        noa <- rbind( noa, data.frame( node=and.gate, type="AND_Gate" ) )
+        sif <- rbind( sif, data.frame( node1=tmp[ 1 ], int="combines", node2=and.gate, weight=NA, p.value=NA ) )
+        noa <- rbind( noa, data.frame( node=tmp[ 1 ], type="regulator" ) )
+        sif <- rbind( sif, data.frame( node1=tmp[ 2 ], int="combines", node2=and.gate, weight=NA, p.value=NA ) )
+        noa <- rbind( noa, data.frame( node=tmp[ 2 ], type="regulator" ) )
+      } else {
+        sif <- rbind( sif, data.frame( node1=coe, int=int, node2=sprintf( "bicluster_%04d", i ),
+                                      weight=cc$coeffs[ coe ], p.value=p.value ) )
+        noa <- rbind( noa, data.frame( node=coe, type="regulator" ) )
+      }
+    }
+    rownames( sif ) <- rownames( noa ) <- NULL
+    sifs[[ i ]] <- sif
+    noas[[ i ]] <- noa
+  }
+  cat( "\n" )
+
+  if ( is.null( out.dir ) && exists( "e" ) ) {
+    out.dir <- paste( e$cmonkey.filename, "network", sep="/" )
+    if ( e$iter != e$n.iter ) out.dir <- sprintf( "%s_%04d/network", e$cmonkey.filename, e$iter )
+  }
+  if ( ! file.exists( out.dir ) ) dir.create( out.dir, recursive=T, showWarnings=F )
+  cat( "Outputing to", out.dir, "\n" )
+
+  sif <- unique( do.call( rbind, sifs ) )
+  noa <- unique( do.call( rbind, noas ) )
+  write.table( sif, quote=F, sep="\t", col.names=T, row.names=F, file=paste( out.dir, "inf.sif", sep="/" ) )
+  write.table( noa, quote=F, sep="\t", col.names=T, row.names=F, file=paste( out.dir, "inf.noa", sep="/" ) )
+
+  cat( "Wrote", nrow( noa ), "nodes and", nrow( sif ), "edges to", out.dir, "\n" )
+  
+  invisible( list( sif=sif, noa=noa ) )
+}
+
+###########################################
 ## write.cyoscape.files
 ###########################################
-write.cytoscape.files <- function(inf.result, clusterStack, sif.filename){
-  ## this function takes an Inferelator result and a cM clusterStack
-  ## and outputs a network file and the associated edge and node
-  ## attribute files for visualizing the network in Cytoscape
+## write.cytoscape.files <- function(inf.result, clusterStack, sif.filename){
+##   ## this function takes an Inferelator result and a cM clusterStack
+##   ## and outputs a network file and the associated edge and node
+##   ## attribute files for visualizing the network in Cytoscape
 
-  ## IMPORTANT: this function depends on the output returned by inferelator()
-  ## change the below accordingly if the output there changes !
+##   ## IMPORTANT: this function depends on the output returned by inferelator()
+##   ## change the below accordingly if the output there changes !
 
-  out<- unlist(inf.result)
-  ## write the weights of the TFGROUPs to an edge-attribute file 
-  ## at the same time create the actual network .sif
-  write("weight (java.lang.Double)", "weights.eda")
+##   out<- unlist(inf.result)
+##   ## write the weights of the TFGROUPs to an edge-attribute file 
+##   ## at the same time create the actual network .sif
+##   write("weight (java.lang.Double)", "weights.eda")
   
-  gatecount = 1
-  for (j in 1:length(out)){
-    nodes<- strsplit(names(out)[j], combine.symbol, fixed=T)[[1]]
-                                        #print(out[j])
-    ## make a .sif file for the actual network
-    ## .sif format : [node]<tab>[relationship]<tab>[node]
+##   gatecount = 1
+##   for (j in 1:length(out)){
+##     nodes<- strsplit(names(out)[j], combine.symbol, fixed=T)[[1]]
+##                                         #print(out[j])
+##     ## make a .sif file for the actual network
+##     ## .sif format : [node]<tab>[relationship]<tab>[node]
 
-                                        #print(gatecount)
-    ## TODO : load this into a data frame and write.table() or something similar 
-    ## if there is only 1 TFGROUP, create two nodes
-    if (length(nodes) == 2) {
-      write(paste(nodes[2], "activates", nodes[1]), sif.filename, append=T)
+##                                         #print(gatecount)
+##     ## TODO : load this into a data frame and write.table() or something similar 
+##     ## if there is only 1 TFGROUP, create two nodes
+##     if (length(nodes) == 2) {
+##       write(paste(nodes[2], "activates", nodes[1]), sif.filename, append=T)
       
-      write(paste(nodes[2], "(activates)", nodes[1],  "=", out[j]), "weights.eda", append=T)
+##       write(paste(nodes[2], "(activates)", nodes[1],  "=", out[j]), "weights.eda", append=T)
       
-    } else if (length(nodes) == 4){
-      ## there are 2 TFGROUP's, create an AND gate (a Y-shaped segment with 4 nodes and 3 edges)
+##     } else if (length(nodes) == 4){
+##       ## there are 2 TFGROUP's, create an AND gate (a Y-shaped segment with 4 nodes and 3 edges)
       
-      write(paste(nodes[2], "combines", paste("AND-", gatecount, sep="")), sif.filename, append=T)
-      write(paste(nodes[3], "combines", paste("AND-", gatecount, sep="")), sif.filename, append=T)
-      write(paste(paste("AND-", gatecount, sep=""), "activates", nodes[1]), sif.filename, append=T)
+##       write(paste(nodes[2], "combines", paste("AND-", gatecount, sep="")), sif.filename, append=T)
+##       write(paste(nodes[3], "combines", paste("AND-", gatecount, sep="")), sif.filename, append=T)
+##       write(paste(paste("AND-", gatecount, sep=""), "activates", nodes[1]), sif.filename, append=T)
       
-      write(paste(paste("AND-", gatecount, sep=""),"(activates)", nodes[1],  "=", out[j]), "weights.eda", append=T)
+##       write(paste(paste("AND-", gatecount, sep=""),"(activates)", nodes[1],  "=", out[j]), "weights.eda", append=T)
       
-      write(paste(paste("AND-",gatecount,sep=""), "=", "(logicGate)"), "types.noa", append=T)
-      gatecount = gatecount + 1
+##       write(paste(paste("AND-",gatecount,sep=""), "=", "(logicGate)"), "types.noa", append=T)
+##       gatecount = gatecount + 1
       
-      ## there is only a cluster (no significant coeffs from inferelator), just write the cluster as a node to file
-    } else if (length(nodes) == 1){
-      write(nodes[1], sif.filename, append=T)
-    }
+##       ## there is only a cluster (no significant coeffs from inferelator), just write the cluster as a node to file
+##     } else if (length(nodes) == 1){
+##       write(nodes[1], sif.filename, append=T)
+##     }
     
-  }
-  ## get attributes of the biclusts from clusterStack (e.g. no. of genes, conds, p-vals)
-  ## and write to appropriate node-attribute files
-  write("clusterGenes", "clusterGenes.noa")
-  write("clusterConditions", "clusterConditions.noa")	
-  write("clusterGeneCount", "clusterGeneCount.noa")
-  write("clusterConditionCount", "clusterConditionCount.noa")
-  write("clusterMotifPValues", "clusterMotifPValues.noa")
-  write("clusterMotifs", "clusterMotifs.noa")
-  write("clusterResiduals", "clusterResiduals.noa")
+##   }
+##   ## get attributes of the biclusts from clusterStack (e.g. no. of genes, conds, p-vals)
+##   ## and write to appropriate node-attribute files
+##   write("clusterGenes", "clusterGenes.noa")
+##   write("clusterConditions", "clusterConditions.noa")	
+##   write("clusterGeneCount", "clusterGeneCount.noa")
+##   write("clusterConditionCount", "clusterConditionCount.noa")
+##   write("clusterMotifPValues", "clusterMotifPValues.noa")
+##   write("clusterMotifs", "clusterMotifs.noa")
+##   write("clusterResiduals", "clusterResiduals.noa")
   
-  for (i in 1:length(clusterStack)){
-    write( paste(paste(i, " = ", "(", sep="") ,paste(clusterStack[[i]]$rows, collapse="::"), ")", sep="") , "clusterGenes.noa", append=T)	
-    write( paste(paste(i, " = ", "(", sep="") ,paste(clusterStack[[i]]$cols, collapse="::"), ")", sep="") , "clusterConditions.noa", append=T)
-    write( paste(i, " = ", clusterStack[[i]]$nrows , sep="") , "clusterGeneCount.noa", append=T)
-    write( paste(i, " = ", clusterStack[[i]]$ncols, sep="") , "clusterConditionCount.noa", append=T)
-    write( paste(i, " = ", clusterStack[[i]]$e.val, sep="") , "clusterMotifPValues.noa", append=T)
-    write( paste(i, " = ", clusterStack[[i]]$resid, sep="") , "clusterResiduals.noa", append=T)
-    write( paste(i, " = (cluster)",sep=""), "types.noa", append=T )
+##   for (i in 1:length(clusterStack)){
+##     write( paste(paste(i, " = ", "(", sep="") ,paste(clusterStack[[i]]$rows, collapse="::"), ")", sep="") , "clusterGenes.noa", append=T)	
+##     write( paste(paste(i, " = ", "(", sep="") ,paste(clusterStack[[i]]$cols, collapse="::"), ")", sep="") , "clusterConditions.noa", append=T)
+##     write( paste(i, " = ", clusterStack[[i]]$nrows , sep="") , "clusterGeneCount.noa", append=T)
+##     write( paste(i, " = ", clusterStack[[i]]$ncols, sep="") , "clusterConditionCount.noa", append=T)
+##     write( paste(i, " = ", clusterStack[[i]]$e.val, sep="") , "clusterMotifPValues.noa", append=T)
+##     write( paste(i, " = ", clusterStack[[i]]$resid, sep="") , "clusterResiduals.noa", append=T)
+##     write( paste(i, " = (cluster)",sep=""), "types.noa", append=T )
     
-    ## this bit of code requires pssm.to.string() from cMonkey (in R_scripts/motif_utils.R)
-    ## if motif(s) exist, write it in the .noa file
-    if(length(clusterStack.redox[[i]]$motif.out$pssms) >0){
-      write(paste(i, " = (", gsub(" ", "::", paste(lapply(clusterStack.redox[[i]]$motif.out$pssm, pssm.to.string), collapse=" ")), ")", sep="")
-            , "clusterMotifs.noa",append=T)
-    } else {
-      ## no motifs exist, leave the list blank
-      write(paste(i, "=", "()"),	 "clusterMotifs.noa", append=T)
-    }	
+##     ## this bit of code requires pssm.to.string() from cMonkey (in R_scripts/motif_utils.R)
+##     ## if motif(s) exist, write it in the .noa file
+##     if(length(clusterStack.redox[[i]]$motif.out$pssms) >0){
+##       write(paste(i, " = (", gsub(" ", "::", paste(lapply(clusterStack.redox[[i]]$motif.out$pssm, pssm.to.string), collapse=" ")), ")", sep="")
+##             , "clusterMotifs.noa",append=T)
+##     } else {
+##       ## no motifs exist, leave the list blank
+##       write(paste(i, "=", "()"),	 "clusterMotifs.noa", append=T)
+##     }	
     
-  } ## end of clusterStack traversal loop
+##   } ## end of clusterStack traversal loop
   
-} ## end of make.network.files function
+## } ## end of make.network.files function
 
 ## count predictors that are in the inferred network
 ## count.predictors = function(inf_result){

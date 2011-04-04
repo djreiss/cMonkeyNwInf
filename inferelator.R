@@ -561,7 +561,7 @@ inferelator <- function( profile, predictor.mat, conds.use, col.map=NULL, tau=10
     min.err <- cv.lars.obj$cv.error[ min.i ]
 
     ##if ( cv.choose[ 1 ] == "min" ) best.s <- which.min( cv.lars.obj$cv )
-    ##else
+    ##!else
     if ( grepl( "+", cv.choose[ 1 ], fixed=T ) ) {
       se <- as.numeric( gsub( "min+", "", gsub( "se", "", cv.choose[ 1 ] ) ) )
       best.s <- min( which( cv.lars.obj$cv <= min( cv.lars.obj$cv ) + se * min.err ) )
