@@ -67,13 +67,15 @@ load.egrin.data <- function( path=".", ... ) {
 ## }
 
 ### OK -- looks like good parameters to use are
-## aic.filter <- 15
+## Updated (version 0.0.9, Aug. 2011)
+## aic.filter <- Inf
 ## alph <- 0.8
 ## tau <- 10
-## tf.groups <- 999
-## r.cutoff <- 2
+## tf.groups <- Inf
+## r.cutoff <- Inf
+## r.filter <- Inf
 ## weighted <- TRUE
-## cv.choose <- "min+4se"
+## cv.choose <- "min+2se"
 ## runnit.wrapper.halo("~/scratch/biclust/EGRIN2/EGRIN1_orig_clusters.RData",cv.choose="min+4se",tf.groups=999,alpha=0.8,tau=10,r.cutoff=2,weighted=T,aic.filter=15,plot=F)
 runnit.wrapper.halo <- function( f, ks="all", ... ) {
   if ( is.character( f ) && file.exists( f ) && ( ! exists( "e" ) || e$tmp.file != f ) ) {
@@ -111,7 +113,7 @@ runnit.wrapper.halo <- function( f, ks="all", ... ) {
   invisible( out )
 }
 
-runnit <- function( ks, data, col.map, predictors, clusterStack, tau=10, plot=T, coeffs=NULL, tf.groups=72, n.boot=1,
+runnit <- function( ks, data, col.map, predictors, clusterStack, tau=10, plot=T, coeffs=NULL, tf.groups=Inf, n.boot=1,
                    boot.opt=c("resample.lars","resample.rows","resample","lars")[1], ... ) {
   ## Bootstrap options: "resample" -- resample cluster rows AND cols; "resample.rows" -- just resample cluster rows;
   ##   "resample.lars" -- run lars/cv.lars multiple times on resampled input matrices;

@@ -212,6 +212,18 @@ write.inf.network <- function( coeffs, out.dir=NULL ) {
   invisible( list( sif=sif, noa=noa ) )
 }
 
+plot.coeff.stats <- function( coeffs ) {
+  par( mfrow=c( 2, 2 ) )
+  hist( sapply( coeffs, function( i ) length( i$coeffs ) ), breaks=20, xlab="Number of coeffs per bicluster" )
+  hist( unlist( lapply( coeffs, function( i ) i$coeffs ) ), breaks=20, xlab="Coefficient values" )
+  legend( "topleft", as.character( sum( unlist( lapply( coeffs, function( i ) i$coeffs < 0 ) ) ) ),
+         text.col="green", cex=0.7 )
+  legend( "topright", as.character( sum( unlist( lapply( coeffs, function( i ) i$coeffs > 0 ) ) ) ),
+         text.col="red", cex=0.7 )
+  hist( sapply( coeffs, function( i ) i$rmsd[ "ts" ] ), breaks=20, xlim=c( 0, 1 ), xlab="RMSD, In" )
+  hist( sapply( coeffs, function( i ) i$rmsd[ "ts.out" ] ), breaks=20, xlim=c( 0, 1 ), xlab="RMDS, Out" )
+}  
+
 ###########################################
 ## write.cyoscape.files
 ###########################################

@@ -18,7 +18,7 @@ cv.glmnet <- function(x, y, lambda, K = 10, cv.reps=10, trace = FALSE, plot.it =
     if(trace) cat("CV Fold", i, "\n")
     omit <- all.folds[[i]]
     fit <- my.glmnet(x[ -omit,  ], y[ -omit], lambda=lambda, weights=weights[ -omit ], ... ) ##s=s,...)
-    fit <- predict.elnet(fit, x[omit,  ,drop=FALSE], ...)
+    fit <- predict(fit, x[omit,  ,drop=FALSE], ...)
     if(length(omit)==1){fit<-matrix(fit,nrow=1)}
     ##residmat[, i] <-
     apply((y[omit] - fit)^2, 2, mean)
@@ -103,6 +103,7 @@ inferelator.enet <- function( profile, predictor.mat, conds.use, col.map=NULL, t
   
   ## TODO: if penalty[x] is not 1, set any penalty[x.y.min] to the average of penalty[x] and penalty[y] ??
   if ( any( orig.penalties != 1 ) ) {
+    warning( "PENALTIES were set to non-1!!!" )
     tmp <- names( which( orig.penalties != 1 ) )
     for ( t in tmp ) {
       g <- grep( t, names( in.penalties ), val=T, fixed=T )

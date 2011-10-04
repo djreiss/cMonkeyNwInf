@@ -39,6 +39,7 @@ inferelate.one.cluster <- function( cluster, predictors, data, col.map=NULL, con
                                          fill.all.ts.frac=1.25, remove.all.ts.frac=0.1, fill.ts.gap.size=1 )
     else cluster.conds <- cluster$cols
   }
+  cluster.rows <- cluster.rows[ cluster.rows %in% rownames( data ) ]
   cluster.conds <- cluster.conds[ cluster.conds %in% colnames( data ) ]
   ##cluster.conds <- gsub( "-", ".", cluster.conds, fixed=T ) ## Halo-specific? Let's hope not!
   cluster.profile <- apply( data[ cluster.rows, ,drop=F ], 2, mean, na.rm=T )
@@ -118,7 +119,7 @@ inferelate.one.cluster <- function( cluster, predictors, data, col.map=NULL, con
 } ## end of inferelate function
 
 get.predictor.matrices <- function( predictors, data, gene.prefix="VNG", ##predictor.mat=NULL, 
-                                   preclust.k=30, funcs="min", quiet=F, ... ) {
+                                   preclust.k=NA, funcs=NULL, quiet=F, ... ) { ##"min"
   if ( ! quiet ) cat( "Computing predictor matrices...\n" )
 
   ## make sure all the TFs given exist in the ratios given
@@ -165,7 +166,7 @@ get.predictor.matrices <- function( predictors, data, gene.prefix="VNG", ##predi
 ## old good: aic.filter.cutoff=5; now using 15. NOTE: aic.filter is just for speedup; seems to give same results
 ##   if use aic.filter=100 !
 get.cluster.predictors <- function( cluster.rows, cluster.profile, predictor.mat, predictor.mat.ands,
-                                   tf.groups, env.names, r.cutoff=NA, aic.filter.cutoff=25, quiet=F,
+                                   tf.groups, env.names, r.cutoff=NA, aic.filter.cutoff=NA, quiet=F,
                                    force.include=env.names, ... ) {
   ## remove TF predictors (tfgroups) if any TF in the tfgroup is in the bicluster
   ## also remove TF predictors (tfgroups) with high ( >r.cutoff) correlation with bicluster
@@ -207,7 +208,7 @@ get.cluster.predictors <- function( cluster.rows, cluster.profile, predictor.mat
                                                paste( unique( names( possibly.regulates ) ), sep=", " ), "\n" )
   ##possibly.regulates <- possibly.regulates[ ! is.na( possibly.regulates ) ]
 
-  if ( ! is.na( aic.filter.cutoff ) && aic.filter.cutoff != 0 ) {
+  if ( ! is.na( aic.filter.cutoff ) && ! is.infinite( aic.filter.cutoff ) && aic.filter.cutoff != 0 ) {
     ## filter single TFGROUPs and combinatory TFGROUPs -separately- by AIC, keeping the best in both cases
     ## Make sure to keep all singleton env. predictors though!
     best.singletons <- filter.by.aic( cluster.profile, predictor.matrix=predictor.mat,
