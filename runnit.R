@@ -42,6 +42,19 @@ load.egrin.data <- function( path=".", ... ) {
                   clusterStack.egrin=clusterStack.egrin ) )
 }
 
+#ifndef PACKAGE
+runnit.egrin.data <- function( ks=1:300, tau=10, plot=T, coeffs=NULL, tf.groups=72, n.boot=1,
+                              boot.opt=c("resample.lars","resample.rows","resample","lars")[1], ... ) {
+  if ( ! "egrin.data" %in% searchpaths() ) {
+    egrin.data <- load.egrin.data( ... )
+    attach( egrin.data )
+  }
+  out <- runnit( ks, data, col.map, predictors, clusterStack.egrin, tau=tau, plot=plot, coeffs=coeffs,
+                tf.groups=tf.groups, n.boot=n.boot, boot.opt=boot.opt, ... )
+  detach( egrin.data )
+  invisible( out )
+}
+#endif
 
 ## runnit.newCM.egrin.data <- function( f, ks="all", tau=10, plot=T, coeffs=NULL, tf.groups=72, n.boot=1,
 ##                               boot.opt=c("resample.lars","resample.rows","resample","lars")[1], ... ) {
@@ -108,7 +121,8 @@ runnit.wrapper.halo <- function( f, ks="all", ... ) {
   if ( ! is.null( predictors ) ) predictors <- predictors[ predictors %in% rownames( data ) ]
   ##tmpz<<-list(data=data,colMap=colMap,predictors=predictors,envMap=envMap)
   ## Gene prefix is used to discriminate genetic predictors from env. predictors.
-  out <- runnit( ks, data, colMap, predictors, e$clusterStack, gene.prefix=e$genome.info$gene.prefix, ... ) ##tau=tau, plot=plot, coeffs=coeffs,
+  out <- runnit( ks, data, colMap, predictors, clusterStack=e$clusterStack,
+                gene.prefix=e$genome.info$gene.prefix, ... ) ##tau=tau, plot=plot, coeffs=coeffs,
   ##tf.groups=tf.groups, n.boot=n.boot, boot.opt=boot.opt, ... )
   invisible( out )
 }
@@ -166,14 +180,15 @@ runnit <- function( ks, data, col.map, predictors, clusterStack, tau=10, plot=T,
                                        col.map=col.map, n.boot=n.boot.lars, boot.opt=boot.opt.lars, ##plot=plot, 
                                        quiet=n.boot>1, ... )
 
-      clust.conds <- sort( coeffs$cluster.conds )
+      clust.rows <- clust$rows[ clust$rows %in% rownames( data ) ]
+      clust.conds <- sort( coeffs$cluster.conds ); clust.conds <- clust.conds[ clust.conds %in% colnames( data ) ]
 
-      observed <- apply( data[ clust$rows, ,drop=F ], 2, mean, na.rm=T )
+      observed <- apply( data[ clust.rows, ,drop=F ], 2, mean, na.rm=T )
 
       apply.func <- get.apply.func() ##if ( multicore:::isChild() ) lapply else mclapply
-      pred.ss <- do.call( rbind, apply.func( coeffs$coeffs.boot, function( b ) predictelate( clust$rows, b, data,
+      pred.ss <- do.call( rbind, apply.func( coeffs$coeffs.boot, function( b ) predictelate( clust.rows, b, data,
                                                            predictor.mats=predictor.mats, tau=tau, ... ) ) )
-      pred.ts <- do.call( rbind, apply.func( coeffs$coeffs.boot, function( b ) predictelate( clust$rows, b, data,
+      pred.ts <- do.call( rbind, apply.func( coeffs$coeffs.boot, function( b ) predictelate( clust.rows, b, data,
                                                predictor.mats=predictor.mats, tau=tau, col.map=col.map, ... ) ) )
 
       if ( is.null( pred.ss ) ) pred.ss <- t( observed * 0 )
@@ -181,15 +196,15 @@ runnit <- function( ks, data, col.map, predictors, clusterStack, tau=10, plot=T,
 
 ##       pred.ss <- pred.ts <- NULL
 ##       for ( b in 1:length( coeffs$coeffs.boot ) ) { ## If bootstrapping was done at inferelator level
-##         pred.ss <- rbind( pred.ss, predictelate( clust$rows, coeffs$coeffs.boot[[ b ]], data,
+##         pred.ss <- rbind( pred.ss, predictelate( clust.rows, coeffs$coeffs.boot[[ b ]], data,
 ##                                                 predictor.mats=predictor.mats, tau=tau, ... ) )
-##         pred.ts <- rbind( pred.ts, predictelate( clust$rows, coeffs$coeffs.boot[[ b ]], data,
+##         pred.ts <- rbind( pred.ts, predictelate( clust.rows, coeffs$coeffs.boot[[ b ]], data,
 ##                                                 predictor.mats=predictor.mats, tau=tau, col.map=col.map, ... ) )
 ##       }
 
       ##stop("NEED TO COMPUTE WEIGHTED RMSD IF WEIGHTED=T")
       if ( "weighted" %in% names( list( ... ) ) && list( ... )$weighted == TRUE ) {
-        vars <- apply( data[ clust$rows, ,drop=F ], 2, var, na.rm=T )
+        vars <- apply( data[ clust.rows, ,drop=F ], 2, var, na.rm=T )
         vars <- vars / ( abs( observed ) + 0.05 )
         vars[ is.na( vars ) | vars == 0 ] <- 1
         weights <- 1 / vars
@@ -252,7 +267,7 @@ runnit <- function( ks, data, col.map, predictors, clusterStack, tau=10, plot=T,
     if ( plot ) {
       ##if ( n.boot == 1 ) try( plot.coeff.obj( out[[ k ]], ... ) )
       ## only plot the boot results for this k ...
-      ##!else try( plot.coeff.obj( out[ grep( paste( "^", k, sep="" ), names( out ) ) ], ... ) )
+      ##else try( plot.coeff.obj( out[ grep( paste( "^", k, sep="" ), names( out ) ) ], ... ) )
       try( plot.coeff.obj( out.k, ... ) )
     }
     attr( out.k, 'class' ) <- 'coeff.obj'
@@ -261,10 +276,71 @@ runnit <- function( ks, data, col.map, predictors, clusterStack, tau=10, plot=T,
     out.k
     ##out <- c( out, out.k )
   } )
-  out <- do.call( c, out )
+  out <- do.call( 'c', out )
   attr( out, "CALL" ) <- match.call( expand.dots=T )
   attr( out, 'class' ) <- 'coeff.obj'
   invisible( out )
 }
 
+#ifndef PACKAGE
+nwInf.package <- function( install=T, update.web=F, check=F, version="0.1.1" ) {
+  ## Can get halo ratios, envMap, colMap via data(halo)
+  source.files <- c( "runnit.R", "inferelator.R", "inferelator_enet.R", "predictelator.R",
+                    "write.inf.network.R" ) ##, "~/scratch/halo/generic_scripts/scattersmooth.R" )
+
+  ## Halo data goes in default package
+  if ( exists( "envMap" ) && ! is.null( envMap ) ) {
+    cat( "Packaging Halo data...\n" )
+    halo <- list( ratios=ratios, envMap=envMap, colMap=colMap, tfs=halo_tfs )
+    halo <<- halo
+  }
+
+  onLoad <- function( libname, pkgname ) { ##.onAttach
+    cat( "Loading ", pkgname, " version ", VERSION, " (", DATE, ")\n", sep="" )
+    cat( "Copyright (C) David J Reiss, Institute for Systems Biology; dreiss@systemsbiology.org.\n" )
+    cat( "http://baliga.systemsbiology.net/cmonkey\n" )
+    cat( "\nNOTE that this package is still sloppy in that it relies upon some global variables:\n" )
+    cat( "'predictor.mats', 'envMap', 'colMap', and optionally 'predictors'.\n" )
+  }
+  
+  source( "~/scratch/halo/generic_scripts/construct.package.R" )
+  construct.package( "cMonkeyNwInf", version=version, source.files=source.files, ##nocpp=T,
+                    functions.visible=c( "runnit.wrapper.halo", "plot.coeff.obj", "write.inf.network",
+                      "plot.coeff.stats" ##,"write.cytoscape.files"
+                      ),
+                    functions.excluded="nwInf.package",
+                    data=if ( exists( "halo" ) && ! is.null( halo ) ) list( halo="halo" ) else NULL,
+                    required=c( "lars", "glmnet", "multicore", "Matrix" ),
+                    suggested=c( "cMonkey", "foreach", "doMC", "ff", "igraph" ),
+                    short.desc="Inferelator-like network inference on cMonkey biclusters",
+                    long.desc="Inferelator-like network inference on cMonkey biclusters",
+                    onLoad=onLoad )
+
+  if ( install ) system( sprintf( "R CMD INSTALL lib/cMonkeyNwInf_%s.tar.gz", version ) )
+
+  if ( check ) {
+    cwd <- setwd( "lib" )
+    system( sprintf( "R CMD CHECK cMonkeyNwInf_%s.tar.gz", version ) )
+    setwd( cwd )
+  }
+  
+  if ( update.web ) {
+    ## system( sprintf( "cp -fv lib/index.html lib/cMonkeyNwInf*_%s.tar.gz ~/Sites/cMonkeyNwInf/", version ) )
+    ## system( sprintf( "rpl VERSION \"%s\" ~/Sites/cMonkeyNwInf/index.html", version ) )
+    ## system( "cp -fv ~/Sites/cMonkeyNwInf/index.html ~/Sites/cMonkeyNwInf/cmonkey.html" )
+    ## if ( install ) {
+    ##   cwd <- setwd( "~/Library/R/packages" ) ## This will change - works for pinnacle!
+    ##   system( sprintf( "zip -r cMonkeyNwInf_%s.zip cMonkeyNwInf", version ) )
+    ##   if ( bigdata ) system( sprintf( "zip -r cMonkeyNwInf.bigdata_%s.zip cMonkeyNwInf.bigdata", version ) )
+    ##   system( sprintf( "mv -v cMonkeyNwInf*.zip %s/lib/", cwd ) )
+    ##   setwd( cwd )
+    ## }
+    ## md5sums <- system( sprintf( "md5sum lib/cMonkeyNwInf*_%s*", version, cwd ), intern=T )
+    ## cat( sprintf( "VERSION %s", version ), md5sums, "\n", sep="\n", file="lib/md5sums.txt" )
+    ## cat( version, "\n", file="lib/VERSION" )
+    ## system( sprintf( "scp lib/VERSION lib/md5sums.txt ~/Sites/cMonkeyNwInf/cmonkey.html lib/cMonkeyNwInf*_%s.tar.gz lib/cMonkeyNwInf*_%s.zip bragi:/local/apache2/htdocs/cmonkey/", version, version ) )
+    system( sprintf( "scp lib/cMonkeyNwInf_%s.tar.gz bragi:/local/apache2/htdocs/cmonkey/cMonkeyNwInf_latest.tar.gz", version ) )
+  }  
+}
+#endif
 

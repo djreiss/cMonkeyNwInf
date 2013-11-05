@@ -72,11 +72,13 @@ plot.coeff.obj <- function( coeffs, do.scattersmooth=T, ... ) {
   legend( "bottomleft", c( "pred.ss", "pred.ts" ), col=c("blue", "black"), lty=1, cex=0.5 )
   lines( coeffs$observed[ pi$clust.conds.plot ], col="red" ) ## overplot it to be on top
   
-  out.net <- plot.cluster.coeffs( list( coeffs ) )
+  out.net <- try( plot.cluster.coeffs( list( coeffs ) ) )
+  if ( class( out.net ) == 'try-error' ) plot( 1:10 )
 
   if ( do.scattersmooth && ! is.null( coeffs$pred.ts ) ) {
-    if ( ! exists( "scattersmooth" ) ) source( "~/scratch/halo/generic_scripts/scattersmooth.R" )
-    scattersmooth( coeffs$observed[ coeffs$cluster.conds ][ ! is.na( coeffs$pred.ts[ 1, coeffs$cluster.conds ] ) ],
+    ##if ( ! exists( "scattersmooth" ) ) source( "~/scratch/halo/generic_scripts/scattersmooth.R" )
+    ##scattersmooth
+    smoothScatter( coeffs$observed[ coeffs$cluster.conds ][ ! is.na( coeffs$pred.ts[ 1, coeffs$cluster.conds ] ) ],
                   coeffs$pred.ts[ 1, coeffs$cluster.conds ][ ! is.na( coeffs$pred.ts[ 1, coeffs$cluster.conds ] ) ] )
   }
   invisible( out.net )

@@ -41,6 +41,12 @@ inferelate.one.cluster <- function( cluster, predictors, data, col.map=NULL, con
   }
   cluster.rows <- cluster.rows[ cluster.rows %in% rownames( data ) ]
   cluster.conds <- cluster.conds[ cluster.conds %in% colnames( data ) ]
+  if ( is.null( cluster.rows ) || ( is.null( cluster.conds ) && conds.use == 'clust' ) ) {
+    out <- list( k=cluster$k, coeffs=numeric(), possibly.regulates=NULL, cluster.conds=cluster.conds,
+                 coeffs.boot=NULL, coef.quantiles=NULL, all.inputs=NULL, plot.info=NULL ) ##, params=in.args ) )
+    return( out )
+  }
+
   ##cluster.conds <- gsub( "-", ".", cluster.conds, fixed=T ) ## Halo-specific? Let's hope not!
   cluster.profile <- apply( data[ cluster.rows, ,drop=F ], 2, mean, na.rm=T )
   if ( any( is.na( cluster.profile ) ) )
@@ -118,13 +124,14 @@ inferelate.one.cluster <- function( cluster, predictors, data, col.map=NULL, con
   }
 } ## end of inferelate function
 
-get.predictor.matrices <- function( predictors, data, gene.prefix="VNG", ##predictor.mat=NULL, 
+get.predictor.matrices <- function( predictors, data, gene.prefix="DVU", ##predictor.mat=NULL, 
                                    preclust.k=NA, funcs=NULL, quiet=F, ... ) { ##"min"
   if ( ! quiet ) cat( "Computing predictor matrices...\n" )
 
   ## make sure all the TFs given exist in the ratios given
   predictors <- predictors[ predictors %in% rownames( data ) ]
-  predictors.genetic <- grep( paste( "^", gene.prefix, sep="" ), predictors, value=T )
+  predictors.genetic <- grep( paste( "^", gene.prefix, sep="" ), predictors, ignore.case=T, value=T )
+  predictors.genetic <- predictors.genetic[ ! grepl( 'knockout', predictors.genetic, ignore.case=T ) ]
   env.names <- setdiff( predictors, predictors.genetic )
 
   ## Note if preclust.k > length(predictors) OR tf.groups is 0 or NA, don't do preclustering
@@ -364,7 +371,7 @@ filter.by.aic <- function( mean.profile, predictor.matrix, top.aic.to.keep, ##r.
 ##    two single predictors (note this is DIFFERENT from r.cutoff and r.min.cutoff. Aint that confusing?)
 ###########################################
 make.combined.predictors <- function( predictor.mat, predictors=rownames( predictor.mat ), funcs="min",
-                                     r.filter=0.8, ... ) {
+                                     r.filter=0.7, ... ) {
   if ( is.null( funcs ) || is.na( funcs ) ) return( predictor.mat )
 ### Make array of min()s and max()s:
   result <- NULL
@@ -562,7 +569,7 @@ inferelator <- function( profile, predictor.mat, conds.use, col.map=NULL, tau=10
     min.err <- cv.lars.obj$cv.error[ min.i ]
 
     ##if ( cv.choose[ 1 ] == "min" ) best.s <- which.min( cv.lars.obj$cv )
-    ##!else
+    ##else
     if ( grepl( "+", cv.choose[ 1 ], fixed=T ) ) {
       se <- as.numeric( gsub( "min+", "", gsub( "se", "", cv.choose[ 1 ] ) ) )
       best.s <- min( which( cv.lars.obj$cv <= min( cv.lars.obj$cv ) + se * min.err ) )

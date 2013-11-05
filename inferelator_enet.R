@@ -34,15 +34,19 @@ cv.glmnet <- function(x, y, lambda, K = 10, cv.reps=10, trace = FALSE, plot.it =
 }
 
 ## Stoopid - allow glmnet to not barf on ...'s
-my.glmnet <- function(x, y, family=c("gaussian","binomial","poisson","multinomial","cox"),
+my.glmnet <- function(x, y, family=c("gaussian","binomial","poisson","multinomial","cox")[1],
                       weights, offset=NULL, alpha=1, nlambda=100,
                       lambda.min=1e-6, ##ifelse(nrow(x) < ncol(x), 0.05, 1e-04),
-                      lambda=NULL, standardize=TRUE, thresh=1e-04, 
+                      lambda=NULL, standardize=TRUE, intercept=TRUE, thresh=1e-04, 
                       dfmax=ncol(x) + 1, pmax=min(dfmax * 1.2, ncol(x)), exclude,
-                      penalty.factor=rep(1, ncol(x)),
-                      maxit=100, type=ifelse(ncol(x)<500,"covariance","naive"), ... ) ##c("covariance", "naive"), HessianExact=FALSE, 
-  glmnet( x, y, family, weights, offset, alpha, nlambda, lambda.min, lambda, standardize, thresh, dfmax, pmax,
-         exclude, penalty.factor, maxit, type ) ##HessianExact, 
+                      penalty.factor=rep(1, ncol(x)), lower.limits=-Inf, upper.limits=Inf,
+                      maxit=100, type.gaussian=ifelse(ncol(x)<500,"covariance","naive"),
+                      type.logistic=c("Newton","modified.Newton"), standardize.response=FALSE,
+                      type.multinomial=c("ungrouped","grouped"),
+                      ... ) ##c("covariance", "naive"), HessianExact=FALSE, 
+  glmnet( x, y, family, weights, offset, alpha, nlambda, lambda.min, lambda, standardize, intercept, thresh, dfmax, pmax,
+         exclude, penalty.factor, lower.limits, upper.limits, maxit, type.gaussian, type.logistic, standardize.response,
+         type.multinomial ) ##HessianExact, 
 
 inferelator.enet <- function( profile, predictor.mat, conds.use, col.map=NULL, tau=10, ##tau.best=NULL,
                              ratio.cutoff=3, coef.cutoff=0.02, cv.k=10, cv.choose="min+2se", ##logit.scale=0.25,
@@ -116,8 +120,8 @@ inferelator.enet <- function( profile, predictor.mat, conds.use, col.map=NULL, t
         in.penalties[ g[ i ] ] <- mean( c( p1, p2 ), na.rm=T )
       }
     }
+    rm( orig.penalties, g, gg, p1, p2, t, tmp )
   }
-  rm( orig.penalties, g, gg, p1, p2, t, tmp )
 
   if ( is.na( weights[ 1 ] ) ) weights <- rep( 1, length( output ) )
   else weights <- weights[ names( output ) ]
@@ -241,7 +245,7 @@ inferelator.enet <- function( profile, predictor.mat, conds.use, col.map=NULL, t
     min.err <- cv.glmnet.obj$cv.error[ min.i ]
 
     ##if ( cv.choose[ 1 ] == "min" ) best.s <- which.min( cv.glmnet.obj$cv )
-    ##!else
+    ##else
     se <- 1
     if ( grepl( "+", cv.choose[ 1 ], fixed=T ) ) {
       se <- as.numeric( gsub( "min+", "", gsub( "se", "", cv.choose[ 1 ] ) ) )
