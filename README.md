@@ -1,3 +1,5 @@
+First, please note that this package is in a very rough state. That being said, it is still quite usable.
+
 Here are notes on Running the package (copied from an email):
 
 The package will also require packages 'lars', 'glmnet', 'Matrix', 'multicore' and all of its dependencies.
@@ -48,4 +50,5 @@ library( cMonkeyNwInf ) ## load the package
 e.coeffs <- runnit.wrapper.halo( e, cv.choose="min+4se", tf.groups=999, alpha=0.8, n.boot=1, tau=10,
                                   r.cutoff=2, r.filter=0.8, weighted=T, aic.filter=25, plot=F )
 
+(Don't mind the 'halo' in the name of this function - that is historical only.)
 This will take a while (30 minutes - 2 hours depending on your computer).
