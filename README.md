@@ -1,5 +1,12 @@
 First, please note that this package is in a very rough state. That being said, it is still quite usable.
 
+To install in R:
+
+```
+install.packages('devtools', dep=T)
+install_github('cMonkeyNwInf','dreiss-isb',subdir='cMonkeyNwInf')
+```
+
 Here are notes on Running the package (copied from an email):
 
 The package will also require packages 'lars', 'glmnet', 'Matrix', 'multicore' and all of their dependencies.
