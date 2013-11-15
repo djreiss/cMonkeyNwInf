@@ -89,7 +89,7 @@ plot.coeff.obj <- function( coeffs, do.scattersmooth=T, ... ) {
 ## Allows multiple coef sets for multiple biclusters to be included in same network plot
 
 plot.cluster.coeffs <- function( coefs, scale=1, cex=0.5, ... ) {
-  require( igraph )
+  require( igraph0 )
   network <- data.frame()
   comb.cnt <- 1
   node.types <- character()

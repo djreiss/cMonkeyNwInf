@@ -283,7 +283,7 @@ runnit <- function( ks, data, col.map, predictors, clusterStack, tau=10, plot=T,
 }
 
 #ifndef PACKAGE
-nwInf.package <- function( install=T, update.web=F, check=F, version="0.1.1" ) {
+nwInf.package <- function( install=T, update.web=F, check=F, version="0.1.2" ) {
   ## Can get halo ratios, envMap, colMap via data(halo)
   source.files <- c( "runnit.R", "inferelator.R", "inferelator_enet.R", "predictelator.R",
                     "write.inf.network.R" ) ##, "~/scratch/halo/generic_scripts/scattersmooth.R" )
@@ -298,7 +298,7 @@ nwInf.package <- function( install=T, update.web=F, check=F, version="0.1.1" ) {
   onLoad <- function( libname, pkgname ) { ##.onAttach
     cat( "Loading ", pkgname, " version ", VERSION, " (", DATE, ")\n", sep="" )
     cat( "Copyright (C) David J Reiss, Institute for Systems Biology; dreiss@systemsbiology.org.\n" )
-    cat( "http://baliga.systemsbiology.net/cmonkey\n" )
+    cat( "http://github.com/dreiss-isb/cMonkeyNwInf\n" )
     cat( "\nNOTE that this package is still sloppy in that it relies upon some global variables:\n" )
     cat( "'predictor.mats', 'envMap', 'colMap', and optionally 'predictors'.\n" )
   }
@@ -311,7 +311,7 @@ nwInf.package <- function( install=T, update.web=F, check=F, version="0.1.1" ) {
                     functions.excluded="nwInf.package",
                     data=if ( exists( "halo" ) && ! is.null( halo ) ) list( halo="halo" ) else NULL,
                     required=c( "lars", "glmnet", "multicore", "Matrix" ),
-                    suggested=c( "cMonkey", "foreach", "doMC", "ff", "igraph" ),
+                    suggested=c( "cMonkey", "foreach", "doMC", "igraph0" ),
                     short.desc="Inferelator-like network inference on cMonkey biclusters",
                     long.desc="Inferelator-like network inference on cMonkey biclusters",
                     onLoad=onLoad )

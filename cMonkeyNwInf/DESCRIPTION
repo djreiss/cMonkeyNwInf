@@ -1,11 +1,11 @@
 Package: cMonkeyNwInf
 Type: Package
 Title: Inferelator-like network inference on cMonkey biclusters
-Version: 0.1.1
-Date: 2013-11-14
+Version: 0.1.2
+Date: 2013-11-15
 Author: David J Reiss, Institute for Systems Biology
 Maintainer: David J Reiss <dreiss@systemsbiology.org>
 Description: Inferelator-like network inference on cMonkey biclusters
 License: GPL-2
 Depends: lars, glmnet, multicore, Matrix 
-Suggests: cMonkey, foreach, doMC, ff, igraph 
+Suggests: cMonkey, foreach, doMC, igraph0 

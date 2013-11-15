@@ -1,15 +1,17 @@
 DATE <-
-"Thu Nov 14 10:16:41 2013"
+"Fri Nov 15 12:51:08 2013"
 VERSION <-
-"0.1.1"
+"0.1.2"
 .onLoad <-
-function( libname, pkgname ) { ##.onAttach
-    cat( "Loading ", pkgname, " version ", VERSION, " (", DATE, ")\n", sep="" )
-    cat( "Copyright (C) David J Reiss, Institute for Systems Biology; dreiss@systemsbiology.org.\n" )
-    cat( "http://baliga.systemsbiology.net/cmonkey\n" )
-    cat( "\nNOTE that this package is still sloppy in that it relies upon some global variables:\n" )
-    cat( "'predictor.mats', 'envMap', 'colMap', and optionally 'predictors'.\n" )
-  }
+function (libname, pkgname) 
+{
+    cat("Loading ", pkgname, " version ", VERSION, " (", DATE, 
+        ")\n", sep = "")
+    cat("Copyright (C) David J Reiss, Institute for Systems Biology; dreiss@systemsbiology.org.\n")
+    cat("http://github.com/dreiss-isb/cMonkeyNwInf\n")
+    cat("\nNOTE that this package is still sloppy in that it relies upon some global variables:\n")
+    cat("'predictor.mats', 'envMap', 'colMap', and optionally 'predictors'.\n")
+}
 combine.symbol <-
 "~~"
 cv.glmnet <-
@@ -614,7 +616,7 @@ function (profile, predictor.mat, conds.use, col.map = NULL,
         if (!quiet) 
             cat(boot, cv.choose[1], min.i, min.err, best.s, cv.glmnet.obj$cv[best.s], 
                 glmnet.obj$lambda[best.s], length(coeffs), "\n")
-        if (rescale.coeffs && length(coeffs) > 0) {
+        if (rescale.coeffs && length(coeffs) > 1) {
             ins <- df.tmp[, names(coeffs), drop = F]
             glmnet.obj2 <- my.glmnet(ins[cols, , drop = F], output[cols], 
                 alpha = alpha, penalty.factor = in.penalties, 
@@ -762,7 +764,7 @@ glmnet(x, y, family, weights, offset, alpha, nlambda, lambda.min,
 plot.cluster.coeffs <-
 function (coefs, scale = 1, cex = 0.5, ...) 
 {
-    require(igraph)
+    require(igraph0)
     network <- data.frame()
     comb.cnt <- 1
     node.types <- character()

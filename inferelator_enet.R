@@ -266,7 +266,7 @@ inferelator.enet <- function( profile, predictor.mat, conds.use, col.map=NULL, t
                        glmnet.obj$lambda[ best.s ], length( coeffs ), "\n" )
 
     ## NOTE: rescaling coeffs needs to be done using glmnet, NOT lm b/c of correlated predictors
-    if ( rescale.coeffs && length( coeffs ) > 0 ) { ## plug coeffs from LARS back into LM, coeffs will be larger.
+    if ( rescale.coeffs && length( coeffs ) > 1 ) { ## plug coeffs from LARS back into LM, coeffs will be larger.
       ins <- df.tmp[ ,names( coeffs ), drop=F ]
       ##inz<<-ins[cols,];outz<<-output[cols];alphaz<<-alpha;penaltyz<<-in.penalties;weightz<<-weights[cols]
       glmnet.obj2 <- my.glmnet( ins[ cols, ,drop=F ], output[ cols ], alpha=alpha, penalty.factor=in.penalties,
