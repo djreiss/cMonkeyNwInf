@@ -59,7 +59,7 @@ Then, the following in R should work (ignore the "halo" in the name of the funct
 library( cMonkeyNwInf ) ## load the package
 
 e.coeffs <- runnit.wrapper.halo( e, cv.choose="min+4se", tf.groups=999, alpha=0.8, n.boot=1, tau=10,
-                                  r.cutoff=2, r.filter=0.8, weighted=T, aic.filter=25, plot=F )
+                                  r.cutoff=Inf, r.filter=Inf, weighted=T, aic.filter=Inf, plot=F )
 ```
 
 (Don't mind the 'halo' in the name of this function - that is historical only.)
