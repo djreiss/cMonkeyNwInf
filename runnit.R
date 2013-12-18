@@ -175,6 +175,7 @@ runnit <- function( ks, data, col.map, predictors, clusterStack, tau=10, plot=T,
         if ( boot.opt %in% c( "resample", "resample.rows" ) ) clust$rows <- sample( clust$rows, replace=T )
         if ( boot.opt == "resample" ) clust$cols <- sample( colnames( data ), length( clust$cols ), replace=F )
       }
+      if (length(clust$cols) <= 2) return(NULL)
 
       coeffs <- inferelate.one.cluster( clust, predictors, data, predictor.mats=predictor.mats, tau=tau,
                                        col.map=col.map, n.boot=n.boot.lars, boot.opt=boot.opt.lars, ##plot=plot, 
