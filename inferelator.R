@@ -69,9 +69,9 @@ inferelate.one.cluster <- function( cluster, predictors, data, col.map=NULL, con
   ## remove TF predictors (tfgroups) if any TF in the tfgroup is in the bicluster
   ## also remove TF predictors (tfgroups) with high ( >0.9) correlation with bicluster
   ## but make sure to add them back as "possiblyRegulates" predictors
-  tmp <- get.cluster.predictors( cluster.rows, cluster.profile[ cluster.conds ],
-                                predictor.mats$predictor.mat[ ,cluster.conds ],
-                                predictor.mats$predictor.mat.ands[ ,cluster.conds ],
+  tmp <- get.cluster.predictors( cluster.rows, cluster.profile[ cluster.conds, drop=F ],
+                                predictor.mats$predictor.mat[ ,cluster.conds, drop=F ],
+                                predictor.mats$predictor.mat.ands[ ,cluster.conds, drop=F ],
                                 predictor.mats$tf.groups, predictor.mats$env.names, quiet=quiet, ... )
   possibly.regulates <- tmp$possibly.regulates
   predictor.mat <- rbind( predictor.mats$predictor.mat, predictor.mats$predictor.mat.ands )

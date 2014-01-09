@@ -1,17 +1,15 @@
 DATE <-
-"Fri Nov 15 12:51:08 2013"
+"Wed Jan  8 16:37:43 2014"
 VERSION <-
-"0.1.2"
+"0.1.3"
 .onLoad <-
-function (libname, pkgname) 
-{
-    cat("Loading ", pkgname, " version ", VERSION, " (", DATE, 
-        ")\n", sep = "")
-    cat("Copyright (C) David J Reiss, Institute for Systems Biology; dreiss@systemsbiology.org.\n")
-    cat("http://github.com/dreiss-isb/cMonkeyNwInf\n")
-    cat("\nNOTE that this package is still sloppy in that it relies upon some global variables:\n")
-    cat("'predictor.mats', 'envMap', 'colMap', and optionally 'predictors'.\n")
-}
+function( libname, pkgname ) { ##.onAttach
+    cat( "Loading ", pkgname, " version ", VERSION, " (", DATE, ")\n", sep="" )
+    cat( "Copyright (C) David J Reiss, Institute for Systems Biology; dreiss@systemsbiology.org.\n" )
+    cat( "http://github.com/dreiss-isb/cMonkeyNwInf\n" )
+    cat( "\nNOTE that this package is still sloppy in that it relies upon some global variables:\n" )
+    cat( "'predictor.mats', 'envMap', 'colMap', and optionally 'predictors'.\n" )
+  }
 combine.symbol <-
 "~~"
 cv.glmnet <-
@@ -331,9 +329,10 @@ function (cluster, predictors, data, col.map = NULL, conds.use = c("clust",
             cluster.weights <- weights
         else cluster.weights <- cluster.weights * weights
     }
-    tmp <- get.cluster.predictors(cluster.rows, cluster.profile[cluster.conds], 
-        predictor.mats$predictor.mat[, cluster.conds], predictor.mats$predictor.mat.ands[, 
-            cluster.conds], predictor.mats$tf.groups, predictor.mats$env.names, 
+    tmp <- get.cluster.predictors(cluster.rows, cluster.profile[cluster.conds, 
+        drop = F], predictor.mats$predictor.mat[, cluster.conds, 
+        drop = F], predictor.mats$predictor.mat.ands[, cluster.conds, 
+        drop = F], predictor.mats$tf.groups, predictor.mats$env.names, 
         quiet = quiet, ...)
     possibly.regulates <- tmp$possibly.regulates
     predictor.mat <- rbind(predictor.mats$predictor.mat, predictor.mats$predictor.mat.ands)
@@ -1108,6 +1107,8 @@ function (ks, data, col.map, predictors, clusterStack, tau = 10,
                   clust$cols <- sample(colnames(data), length(clust$cols), 
                     replace = F)
             }
+            if (length(clust$cols) <= 2) 
+                return(NULL)
             coeffs <- inferelate.one.cluster(clust, predictors, 
                 data, predictor.mats = predictor.mats, tau = tau, 
                 col.map = col.map, n.boot = n.boot.lars, boot.opt = boot.opt.lars, 
