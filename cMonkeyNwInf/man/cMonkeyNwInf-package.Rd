@@ -13,7 +13,7 @@ Inferelator-like network inference on cMonkey biclusters
 Package: \tab cMonkeyNwInf\cr
 Type: \tab Package\cr
 Version: \tab 1.0\cr
-Date: \tab 2014-01-08\cr
+Date: \tab 2014-02-25\cr
 License: \tab GPL-2\cr
 }
 \url{}

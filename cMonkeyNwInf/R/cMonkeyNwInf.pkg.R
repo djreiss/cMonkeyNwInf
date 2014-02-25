@@ -1,7 +1,7 @@
 DATE <-
-"Wed Jan  8 16:37:43 2014"
+"Tue Feb 25 14:26:24 2014"
 VERSION <-
-"0.1.3"
+"0.1.4"
 .onLoad <-
 function( libname, pkgname ) { ##.onAttach
     cat( "Loading ", pkgname, " version ", VERSION, " (", DATE, ")\n", sep="" )
@@ -102,7 +102,7 @@ function (mean.profile, predictor.matrix, top.aic.to.keep, force.pos.neg = NA,
 }
 get.apply.func <-
 function (plot = F) 
-if (multicore:::isChild() || plot || (exists("DEBUG") && DEBUG)) lapply else mclapply
+if (parallel:::isChild() || plot || (exists("DEBUG") && DEBUG)) lapply else mclapply
 get.boot.coef.quantiles <-
 function (coef.obj, use.grep = F) 
 {
@@ -890,19 +890,18 @@ function (coeffs, do.scattersmooth = T, ...)
             rep(min(pi$cv.lars.obj$cv), 2) + pi$se * pi$min.err, 
             col = 2, lty = 2, lwd = 1)
     }
+    conds <- pi$clust.conds.plot
     if (length(coeffs$coeffs) > 0) {
-        matplot(t(rbind(coeffs$observed[pi$clust.conds.plot], 
-            pi$predictor.mat[, pi$clust.conds.plot])), col = pi$colors, 
-            ylab = "Normalized expression", xlab = "Conditions", 
-            type = "l", main = pi$main)
+        matplot(t(rbind(coeffs$observed[conds], pi$predictor.mat[, 
+            conds])), col = pi$colors, ylab = "Normalized expression", 
+            xlab = "Conditions", type = "l", main = pi$main)
         legend("bottomright", c("biclust", names(coeffs$coeffs)), 
             col = pi$colors, lty = 1, cex = 0.5)
         lines(pi$cluster.profile, col = "red")
     }
     else {
-        plot(coeffs$observed[pi$clust.conds.plot], col = "red", 
-            ylab = "Normalized expression", xlab = "Conditions", 
-            type = "l", main = pi$main)
+        plot(coeffs$observed[conds], col = "red", ylab = "Normalized expression", 
+            xlab = "Conditions", type = "l", main = pi$main)
         legend("bottomright", "biclust", col = "red", lty = 1, 
             cex = 0.5)
     }
