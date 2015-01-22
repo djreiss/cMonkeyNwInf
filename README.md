@@ -16,11 +16,15 @@ Load the RData file and look at the 'env.nwInf' function.
 
 Look at 'colMap', 'envMap' and 'predictors' for examples. 
 
-1. 'predictors' is the list of TFs
+1. 'predictors' is the list of TFs (a character vector)
 2. 'colMap' gives the experimental metadata such as time-series, time point, etc.
 3. 'envMap' gives the environmental data such as oxygen level, etc. These are used in addition to the 'predictors' as potential influences.
 
-The colMap is probably the most confusing. Here is a summary:
+The 'predictors' list is a list of TFs. They need to have the names that are in the rownames of the ratios matrix -- i.e., same format, etc.
+
+The 'envMap' is a matrix of environmental data as a function of experiment. It should have the same format as the expression ratios matrix, and the same number of columns (and same column names -- experiment names). The rows from this matrix will be included as possible predictors along with the TFs listed in the 'predictors' list.
+
+The 'colMap' is probably the most confusing. Here is a summary:
 
 It is a data.frame, with 1 row for each condition in the microarray data. If a condition is part of a time series, then it will have
 
@@ -48,7 +52,7 @@ $ ts.ind : NOT USED, just place an integer in there
 $ numTS : not used, just place an integer in there
 ```
 
-I assume you have all the pieces in place (tfs list, colMap, and [optionally] envMap)... set them up in R
+Assuming you have all the pieces in place (tfs list ('predictors'), 'colMap', and [optionally] 'envMap')... set them up in R:
 
 1. the tfs list needs to be called "predictors"
 2. colMap needs to be called "colMap"   (easy ;)
