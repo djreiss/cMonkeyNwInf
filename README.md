@@ -1,4 +1,4 @@
-First, please note that this package is in a very rough state. That being said, it is still quite usable.
+First, please note that this package is in a very rough state. That being said, it is still usable for someone with a little bioinformatics/programming/R experience.
 
 To install in R:
 
@@ -52,11 +52,7 @@ $ ts.ind : NOT USED, just place an integer in there
 $ numTS : not used, just place an integer in there
 ```
 
-Assuming you have all the pieces in place (tfs list ('predictors'), 'colMap', and [optionally] 'envMap')... set them up in R:
-
-1. the tfs list needs to be called "predictors"
-2. colMap needs to be called "colMap"   (easy ;)
-3. envMap needs to be called "envMap"
+Assuming you have all the pieces in place (tfs list ('predictors'), 'colMap', and [optionally] 'envMap') set up in your R environment, 
 
 Then, the following in R should work (ignore the "halo" in the name of the function):
 
@@ -69,3 +65,16 @@ e.coeffs <- runnit.wrapper.halo( e, cv.choose="min+4se", tf.groups=999, alpha=0.
 
 (Don't mind the 'halo' in the name of this function - that is historical only.)
 This will take a while (30 minutes - 2 hours depending on your computer).
+It will run in parallel using all cores on your computer. If you get an error, setting the variable
+
+```
+DEBUG = TRUE
+```
+
+in your R environment will turn off parallelization so that you can use
+
+```
+traceback()
+```
+
+to see what went wrong (and then email me or open up an issue).
