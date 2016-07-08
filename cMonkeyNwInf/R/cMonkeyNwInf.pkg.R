@@ -5,8 +5,8 @@ VERSION <-
 .onLoad <-
 function( libname, pkgname ) { ##.onAttach
     cat( "Loading ", pkgname, " version ", VERSION, " (", DATE, ")\n", sep="" )
-    cat( "Copyright (C) David J Reiss, Institute for Systems Biology; dreiss@systemsbiology.org.\n" )
-    cat( "http://github.com/dreiss-isb/cMonkeyNwInf\n" )
+    cat( "Copyright (C) David J Reiss, Institute for Systems Biology; dreiss.isb@gmail.com.org.\n" )
+    cat( "http://github.com/djreiss/cMonkeyNwInf\n" )
     cat( "\nNOTE that this package is still sloppy in that it relies upon some global variables:\n" )
     cat( "'predictor.mats', 'envMap', 'colMap', and optionally 'predictors'.\n" )
   }

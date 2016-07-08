@@ -4,7 +4,7 @@ Title: Inferelator-like network inference on cMonkey biclusters
 Version: 0.1.4
 Date: 2014-02-25
 Author: David J Reiss, Institute for Systems Biology
-Maintainer: David J Reiss <dreiss@systemsbiology.org>
+Maintainer: David J Reiss <dreiss.isb@gmail.com.org>
 Description: Inferelator-like network inference on cMonkey biclusters
 License: GPL-2
 Depends: lars, glmnet, Matrix 

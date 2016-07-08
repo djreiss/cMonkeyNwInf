@@ -5,7 +5,7 @@ To install in R:
 ```
 install.packages('devtools', dep=T)
 library(devtools)
-install_github('cMonkeyNwInf','dreiss-isb',subdir='cMonkeyNwInf')
+install_github('cMonkeyNwInf','djreiss',subdir='cMonkeyNwInf')
 ```
 
 Here are notes on Running the package (copied from an email):
